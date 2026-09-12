@@ -15,8 +15,8 @@ let currentMetric = {
   compare: "height"
 };
 
-// 儲存鍵值 (更新至 V2 清空初始假資料)
-const STORAGE_KEY = "GROWTH_TRACKER_DATA_V2";
+// 儲存鍵值 (更新至 PROD_V3 並徹底抹除任何舊示範資料殘留)
+const STORAGE_KEY = "GROWTH_TRACKER_DATA_PROD_V3";
 
 // 初始化
 document.addEventListener("DOMContentLoaded", () => {
@@ -33,19 +33,48 @@ document.addEventListener("DOMContentLoaded", () => {
  * 載入資料 (優先從 LocalStorage 讀取，否則載入 INITIAL_GROWTH_DATA)
  */
 function loadData() {
+  // 1. 強制抹除歷史版本 LocalStorage 殘留
+  ['GROWTH_TRACKER_DATA_V1', 'GROWTH_TRACKER_DATA_V2'].forEach(k => {
+    try { localStorage.removeItem(k); } catch(e) {}
+  });
+
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     try {
-      growthData = JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // 檢查是否含有舊示範資料特徵
+      const hasMock = parsed.children && parsed.children.anan && parsed.children.anan.records &&
+                      parsed.children.anan.records.some(r => r.note && (r.note.includes("安安誕生") || r.note.includes("抓周")));
+      if (hasMock) {
+        console.log("偵測到示範資料殘留，強制重置為全新空白狀態");
+        growthData = JSON.parse(JSON.stringify(INITIAL_GROWTH_DATA));
+        growthData.children.anan.records = [];
+        growthData.children.anan.milestones = [];
+        growthData.children.lele.records = [];
+        growthData.children.lele.milestones = [];
+        saveData();
+        return;
+      }
+      growthData = parsed;
+      return;
     } catch (e) {
       console.warn("無法解析本機資料，使用初始資料庫", e);
-      growthData = JSON.parse(JSON.stringify(INITIAL_GROWTH_DATA));
     }
-  } else {
-    // 第一次載入乾淨初始結構
-    growthData = JSON.parse(JSON.stringify(INITIAL_GROWTH_DATA));
-    saveData();
   }
+
+  // 2. 載入乾淨初始結構（保證為完全空白的陣列）
+  growthData = JSON.parse(JSON.stringify(INITIAL_GROWTH_DATA));
+  if (growthData.children) {
+    if (growthData.children.anan) {
+      growthData.children.anan.records = [];
+      growthData.children.anan.milestones = [];
+    }
+    if (growthData.children.lele) {
+      growthData.children.lele.records = [];
+      growthData.children.lele.milestones = [];
+    }
+  }
+  saveData();
 }
 
 /**
