@@ -15,8 +15,8 @@ let currentMetric = {
   compare: "height"
 };
 
-// 儲存鍵值
-const STORAGE_KEY = "GROWTH_TRACKER_DATA_V1";
+// 儲存鍵值 (更新至 V2 清空初始假資料)
+const STORAGE_KEY = "GROWTH_TRACKER_DATA_V2";
 
 // 初始化
 document.addEventListener("DOMContentLoaded", () => {
@@ -42,7 +42,9 @@ function loadData() {
       growthData = JSON.parse(JSON.stringify(INITIAL_GROWTH_DATA));
     }
   } else {
+    // 第一次載入乾淨初始結構
     growthData = JSON.parse(JSON.stringify(INITIAL_GROWTH_DATA));
+    saveData();
   }
 }
 
@@ -97,10 +99,10 @@ function calculateBMI(heightCm, weightKg) {
  * 估算衛福部生長百分位區間
  */
 function estimatePercentile(metric, ageMonths, value) {
+  if (!value) return "--";
   const standards = growthData.whoStandards[metric];
   if (!standards) return "標準區間";
 
-  // 尋找最接近之月齡
   let closest = standards[0];
   let minDiff = 9999;
   for (const s of standards) {
@@ -129,6 +131,8 @@ function renderAllViews() {
   renderTimelines();
   renderShoeGuide();
   renderBrandTips();
+  renderCompareTable();
+  renderDynamicShoeStatus();
 
   // 繪製圖表
   renderSingleChart("anan", currentMetric.anan);
@@ -149,18 +153,18 @@ function renderHeroSummary() {
   document.getElementById("hero-age-anan").textContent = ananAge.formatted;
   document.getElementById("hero-age-lele").textContent = leleAge.formatted;
 
-  const ananLatest = anan.records[anan.records.length - 1] || {};
-  const leleLatest = lele.records[lele.records.length - 1] || {};
+  const ananLatest = anan.records && anan.records.length > 0 ? anan.records[anan.records.length - 1] : null;
+  const leleLatest = lele.records && lele.records.length > 0 ? lele.records[lele.records.length - 1] : null;
 
-  document.getElementById("hero-h-anan").textContent = ananLatest.height || "--";
-  document.getElementById("hero-w-anan").textContent = ananLatest.weight || "--";
-  document.getElementById("hero-s-anan").textContent = ananLatest.shoeSize || "--";
-  document.getElementById("hero-bmi-anan").textContent = calculateBMI(ananLatest.height, ananLatest.weight);
+  document.getElementById("hero-h-anan").textContent = ananLatest ? ananLatest.height : "--";
+  document.getElementById("hero-w-anan").textContent = ananLatest ? ananLatest.weight : "--";
+  document.getElementById("hero-s-anan").textContent = (ananLatest && ananLatest.shoeSize) ? ananLatest.shoeSize : "--";
+  document.getElementById("hero-bmi-anan").textContent = ananLatest ? calculateBMI(ananLatest.height, ananLatest.weight) : "--";
 
-  document.getElementById("hero-h-lele").textContent = leleLatest.height || "--";
-  document.getElementById("hero-w-lele").textContent = leleLatest.weight || "--";
-  document.getElementById("hero-s-lele").textContent = leleLatest.shoeSize || "--";
-  document.getElementById("hero-bmi-lele").textContent = calculateBMI(leleLatest.height, leleLatest.weight);
+  document.getElementById("hero-h-lele").textContent = leleLatest ? leleLatest.height : "--";
+  document.getElementById("hero-w-lele").textContent = leleLatest ? leleLatest.weight : "--";
+  document.getElementById("hero-s-lele").textContent = (leleLatest && leleLatest.shoeSize) ? leleLatest.shoeSize : "--";
+  document.getElementById("hero-bmi-lele").textContent = leleLatest ? calculateBMI(leleLatest.height, leleLatest.weight) : "--";
 }
 
 /**
@@ -169,13 +173,24 @@ function renderHeroSummary() {
 function renderOverviewMetrics() {
   ["anan", "lele"].forEach(childId => {
     const child = growthData.children[childId];
-    const latest = child.records[child.records.length - 1] || {};
+    const container = document.getElementById(`overview-metrics-${childId}`);
+    if (!container) return;
+
+    if (!child.records || child.records.length === 0) {
+      container.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 22px 14px; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1; color: #64748b;">
+          <div style="font-size: 1.5rem; margin-bottom: 4px;">🌱</div>
+          <strong>尚未建立 ${child.name} 的測量數據</strong>
+          <p style="font-size: 0.85rem; margin-top: 4px; color: #94a3b8;">請點擊「登錄與資料管理」新增第一筆身高、體重與鞋碼！</p>
+        </div>
+      `;
+      return;
+    }
+
+    const latest = child.records[child.records.length - 1];
     const age = calculateAge(child.birthDate, latest.date);
     const bmi = calculateBMI(latest.height, latest.weight);
     const hPercentile = estimatePercentile("height", latest.ageMonths || age.totalMonths, latest.height);
-
-    const container = document.getElementById(`overview-metrics-${childId}`);
-    if (!container) return;
 
     container.innerHTML = `
       <div class="metric-pill">
@@ -212,7 +227,19 @@ function renderTables() {
     const countSpan = document.getElementById(`${childId}-record-count`);
     if (!tbody) return;
 
-    if (countSpan) countSpan.textContent = child.records.length;
+    const count = child.records ? child.records.length : 0;
+    if (countSpan) countSpan.textContent = count;
+
+    if (count === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" style="text-align: center; color: #94a3b8; padding: 36px 16px;">
+            📝 目前尚無 ${child.name} 的測量紀錄。請至上方「📝 登錄與資料管理」填寫第一筆數據！
+          </td>
+        </tr>
+      `;
+      return;
+    }
 
     tbody.innerHTML = child.records.map(rec => {
       const bmi = calculateBMI(rec.height, rec.weight);
@@ -242,6 +269,16 @@ function renderTimelines() {
     const container = document.getElementById(`timeline-${childId}`);
     if (!container) return;
 
+    if (!child.milestones || child.milestones.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; color: #94a3b8; padding: 28px 16px; background: #f8fafc; border-radius: 8px; border: 1px dashed #e2e8f0;">
+          ⭐ 尚未記錄 ${child.name} 的生活里程碑與金句。<br>
+          <span style="font-size: 0.85rem; color: #cbd5e1;">可至「登錄與資料管理」記錄孩子的雙輪車、塗氟或可愛童言童語！</span>
+        </div>
+      `;
+      return;
+    }
+
     container.innerHTML = child.milestones.map(m => `
       <div class="timeline-item">
         <div class="timeline-dot" style="border-color: ${child.accentColor};">${m.icon || '⭐'}</div>
@@ -270,21 +307,19 @@ function renderSingleChart(childId, metric = "height") {
 
   const child = growthData.children[childId];
   const standards = growthData.whoStandards[metric];
-  const maxMonth = childId === "anan" ? 66 : 48; // 顯示合理範圍
+  const maxMonth = childId === "anan" ? 66 : 48;
   const filteredStandards = standards.filter(s => s.month <= maxMonth);
 
-  // X 軸標籤（月齡）
   const labels = filteredStandards.map(s => `${s.month}M`);
-
-  // WHO 百分位常模數據
   const p97Data = filteredStandards.map(s => s.p97);
   const p85Data = filteredStandards.map(s => s.p85);
   const p50Data = filteredStandards.map(s => s.p50);
   const p15Data = filteredStandards.map(s => s.p15);
   const p3Data = filteredStandards.map(s => s.p3);
 
-  // 孩童實際紀錄映射至 X 軸月齡
+  // 孩童實際紀錄
   const childPoints = filteredStandards.map(s => {
+    if (!child.records) return null;
     const match = child.records.find(r => Math.abs(r.ageMonths - s.month) <= 1);
     return match ? match[metric] : null;
   });
@@ -431,21 +466,21 @@ function renderCompareChart(metric = "height") {
   const anan = growthData.children.anan;
   const lele = growthData.children.lele;
   const standards = growthData.whoStandards[metric];
-  const maxMonth = 42; // 以樂樂目前的年齡為基準對齊
+  const maxMonth = 42;
   const filteredStandards = standards.filter(s => s.month <= maxMonth);
 
   const labels = filteredStandards.map(s => `${s.month}M (${(s.month/12).toFixed(1)}歲)`);
   const isHeight = metric === "height";
   const unit = isHeight ? "cm" : "kg";
 
-  // 安安同月齡數值
   const ananPoints = filteredStandards.map(s => {
+    if (!anan.records) return null;
     const match = anan.records.find(r => Math.abs(r.ageMonths - s.month) <= 1);
     return match ? match[metric] : null;
   });
 
-  // 樂樂同月齡數值
   const lelePoints = filteredStandards.map(s => {
+    if (!lele.records) return null;
     const match = lele.records.find(r => Math.abs(r.ageMonths - s.month) <= 1);
     return match ? match[metric] : null;
   });
@@ -534,6 +569,86 @@ function renderCompareChart(metric = "height") {
 }
 
 /**
+ * 渲染同年齡對照表格
+ */
+function renderCompareTable() {
+  const tbody = document.getElementById("compare-table-body");
+  if (!tbody) return;
+
+  const anan = growthData.children.anan;
+  const lele = growthData.children.lele;
+
+  if (!anan.records || !lele.records || anan.records.length === 0 || lele.records.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; color: #94a3b8; padding: 28px 16px;">
+          ⚖️ 目前兩兄弟尚無重疊年齡的測量數據。<br>
+          <span style="font-size: 0.85rem; color: #cbd5e1;">當為安安與樂樂登錄成長紀錄後，此處將自動比對相同歲數（如周歲、2歲、3歲）的發育狀況！</span>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  // 尋找共同對照月齡
+  const commonMilestones = [0, 6, 12, 24, 36, 48];
+  const rows = [];
+  commonMilestones.forEach(m => {
+    const aRec = anan.records.find(r => Math.abs(r.ageMonths - m) <= 2);
+    const lRec = lele.records.find(r => Math.abs(r.ageMonths - m) <= 2);
+    if (aRec || lRec) {
+      rows.push(`
+        <tr>
+          <td><strong>滿 ${Math.floor(m/12)} 歲 (${m}M)</strong></td>
+          <td>${aRec ? `${aRec.height} cm / ${aRec.weight} kg` : '--'}</td>
+          <td>${aRec && aRec.shoeSize ? `${aRec.footLength || ''} cm (${aRec.shoeSize})` : '--'}</td>
+          <td>${lRec ? `${lRec.height} cm / ${lRec.weight} kg` : '--'}</td>
+          <td>${lRec && lRec.shoeSize ? `${lRec.footLength || ''} cm (${lRec.shoeSize})` : '--'}</td>
+          <td style="color: #475569;">${(aRec && lRec) ? '兩兄弟同歲數對照' : '紀錄累積中'}</td>
+        </tr>
+      `);
+    }
+  });
+
+  tbody.innerHTML = rows.length > 0 ? rows.join("") : `
+    <tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 24px;">紀錄累積中...</td></tr>
+  `;
+}
+
+/**
+ * 渲染 Tab 5 鞋碼建議卡片
+ */
+function renderDynamicShoeStatus() {
+  ["anan", "lele"].forEach(childId => {
+    const child = growthData.children[childId];
+    const container = document.getElementById(`shoe-status-${childId}`);
+    if (!container) return;
+
+    const latest = child.records && child.records.length > 0 ? child.records[child.records.length - 1] : null;
+    if (latest && latest.footLength) {
+      const recMin = (latest.footLength + 0.8).toFixed(1);
+      const recMax = (latest.footLength + 1.0).toFixed(1);
+      container.innerHTML = `
+        <div class="card-title" style="margin-bottom: 8px;">${child.avatar} ${child.name} 目前鞋碼建議 (${child.currentGrade})</div>
+        <p style="font-size: 0.95rem; color: #334155; margin-bottom: 6px;">
+          • 實際腳長：<strong>${latest.footLength} cm</strong><br>
+          • 建議鞋內長：<strong>${recMin} ~ ${recMax} cm</strong> (預留 0.8~1.0cm 活動空間)<br>
+          • 目前穿著鞋碼：<strong>${latest.shoeSize || '建議選購約 ' + recMax + ' cm'}</strong>
+        </p>
+        <span class="badge ${childId === 'anan' ? 'badge-anan' : 'badge-lele'}">定期量測防磨腳</span>
+      `;
+    } else {
+      container.innerHTML = `
+        <div class="card-title" style="margin-bottom: 8px;">${child.avatar} ${child.name} 鞋碼狀況 (${child.currentGrade})</div>
+        <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 6px;">
+          尚未登錄腳長數據。可至「登錄與資料管理」填寫最新腳長，或使用下方工具試算！
+        </p>
+      `;
+    }
+  });
+}
+
+/**
  * 單一圖表切換 身高 / 體重
  */
 function updateSingleChart(childId, metric) {
@@ -611,11 +726,9 @@ function calculateShoeSize() {
     return;
   }
 
-  // 運動鞋建議預留 0.8 ~ 1.0cm
   const recMin = (val + 0.8).toFixed(1);
   const recMax = (val + 1.0).toFixed(1);
 
-  // 匹配對照表
   let match = growthData.shoeSizeGuide.find(g => {
     const parts = g.footCm.split("~").map(p => parseFloat(p.trim()));
     return val >= parts[0] && val <= parts[1];
@@ -658,7 +771,6 @@ function switchTab(tabId) {
     p.classList.toggle("active", p.id === tabId);
   });
 
-  // 觸發 Chart.js 重新調整寬度以避免尺寸錯位
   setTimeout(() => {
     Object.values(currentCharts).forEach(c => {
       if (c) c.resize();
@@ -686,6 +798,8 @@ function handleAddRecord(e) {
   const child = growthData.children[childId];
   const age = calculateAge(child.birthDate, date);
 
+  if (!child.records) child.records = [];
+
   const newRecord = {
     date: date,
     ageMonths: age.totalMonths,
@@ -697,11 +811,9 @@ function handleAddRecord(e) {
     note: note
   };
 
-  // 加入並依日期排序
   child.records.push(newRecord);
   child.records.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  // 存檔與重繪
   saveData();
   renderAllViews();
 
@@ -724,6 +836,8 @@ function handleAddMilestone(e) {
   const desc = document.getElementById("input-ms-desc").value;
 
   const child = growthData.children[childId];
+  if (!child.milestones) child.milestones = [];
+
   child.milestones.unshift({
     date: date,
     title: title,
@@ -778,14 +892,14 @@ function copyDataToClipboard() {
 }
 
 /**
- * 還原初始資料
+ * 還原初始空白狀態
  */
 function resetToInitial() {
-  if (confirm("⚠️ 確定要清除自訂紀錄並還原至系統初始預設範例嗎？")) {
+  if (confirm("⚠️ 確定要清空所有已填寫紀錄並還原至初始空白狀態嗎？")) {
     localStorage.removeItem(STORAGE_KEY);
     loadData();
     renderAllViews();
-    alert("🔄 已還原至初始資料！");
+    alert("🔄 已還原至初始空白狀態！");
   }
 }
 
