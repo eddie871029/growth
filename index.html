@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>安安與樂樂 成長趨勢紀錄手冊｜雙寶健康曲線與童言童語</title>
+  
+  <!-- Google Fonts: Outfit & Noto Sans TC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js CDN for Interactive Growth Curves -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body>
+
+  <!-- Hero Header Section -->
+  <header class="hero">
+    <div class="container hero-content">
+      <span class="hero-badge">🌱 BROTHERS GROWTH TRACKER</span>
+      <h1>安安與樂樂 成長趨勢紀錄</h1>
+      <p class="hero-subtitle">即時追蹤身高、體重、鞋碼尺寸，對照衛福部男童標準生長百分位，珍藏童年精彩里程碑。</p>
+
+      <!-- Quick Summary Cards for both boys -->
+      <div class="kids-summary-grid">
+        <!-- An-An Hero Card -->
+        <div class="kid-hero-card anan-theme">
+          <div class="kid-hero-avatar">👦</div>
+          <div class="kid-hero-info">
+            <div class="kid-hero-name-row">
+              <span class="kid-hero-name">安安 (哥哥)</span>
+              <span class="kid-grade-badge">幼稚園中班</span>
+            </div>
+            <div class="kid-hero-age" id="hero-age-anan">計算中年齡...</div>
+            <div class="kid-hero-stats-row">
+              <div class="kid-hero-stat-item">身高: <strong id="hero-h-anan">--</strong> cm</div>
+              <div class="kid-hero-stat-item">體重: <strong id="hero-w-anan">--</strong> kg</div>
+              <div class="kid-hero-stat-item">鞋碼: <strong id="hero-s-anan">--</strong></div>
+              <div class="kid-hero-stat-item">BMI: <strong id="hero-bmi-anan">--</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Le-Le Hero Card -->
+        <div class="kid-hero-card lele-theme">
+          <div class="kid-hero-avatar">👶</div>
+          <div class="kid-hero-info">
+            <div class="kid-hero-name-row">
+              <span class="kid-hero-name">樂樂 (弟弟)</span>
+              <span class="kid-grade-badge">幼稚園小班</span>
+            </div>
+            <div class="kid-hero-age" id="hero-age-lele">計算中年齡...</div>
+            <div class="kid-hero-stats-row">
+              <div class="kid-hero-stat-item">身高: <strong id="hero-h-lele">--</strong> cm</div>
+              <div class="kid-hero-stat-item">體重: <strong id="hero-w-lele">--</strong> kg</div>
+              <div class="kid-hero-stat-item">鞋碼: <strong id="hero-s-lele">--</strong></div>
+              <div class="kid-hero-stat-item">BMI: <strong id="hero-bmi-lele">--</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sticky Navigation Tabs -->
+  <nav class="nav-tabs-wrapper">
+    <div class="container">
+      <div class="nav-tabs">
+        <button class="nav-btn active" data-tab="tab-overview">📊 總覽儀表板</button>
+        <button class="nav-btn anan-tab" data-tab="tab-anan">👦 安安專區 (中班)</button>
+        <button class="nav-btn lele-tab" data-tab="tab-lele">👶 樂樂專區 (小班)</button>
+        <button class="nav-btn" data-tab="tab-compare">⚖️ 同年齡對比</button>
+        <button class="nav-btn" data-tab="tab-shoes">👟 鞋碼與選鞋指南</button>
+        <button class="nav-btn" data-tab="tab-manage">📝 登錄與資料管理</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="container tab-content">
+
+    <!-- =========================================
+         Tab 1: 總覽儀表板 (Overview Dashboard)
+         ========================================= -->
+    <section id="tab-overview" class="tab-pane active">
+      <div class="section-title-wrap">
+        <h2>📊 雙寶成長全貌概況</h2>
+        <p>一站式查看安安與樂樂的即時生理數值、最新發展指標與近期備忘紀錄。</p>
+      </div>
+
+      <!-- Quick Metrics Side-by-Side -->
+      <div class="grid-2">
+        <!-- An-An Card -->
+        <div class="card" style="border-top: 4px solid var(--anan-accent);">
+          <div class="card-header">
+            <div class="card-title">👦 安安（4 歲＋ / 中班）</div>
+            <span class="badge badge-anan">生長良好 50%~85%</span>
+          </div>
+          <div class="metrics-row" id="overview-metrics-anan">
+            <!-- Rendered by JS -->
+          </div>
+          <p style="font-size: 0.9rem; color: #475569; margin-bottom: 12px;">
+            🌟 <strong>最新亮點：</strong>已順利解鎖雙輪腳踏車平衡騎乘！平時是很有責任感的小班長，很懂得呵護弟弟。
+          </p>
+          <button class="btn-outline btn-sm" onclick="switchTab('tab-anan')">查看安安專區 ➜</button>
+        </div>
+
+        <!-- Le-Le Card -->
+        <div class="card" style="border-top: 4px solid var(--lele-accent);">
+          <div class="card-header">
+            <div class="card-title">👶 樂樂（3 歲＋ / 小班）</div>
+            <span class="badge badge-lele">生長良好 50%~85%</span>
+          </div>
+          <div class="metrics-row" id="overview-metrics-lele">
+            <!-- Rendered by JS -->
+          </div>
+          <p style="font-size: 0.9rem; color: #475569; margin-bottom: 12px;">
+            🌟 <strong>最新亮點：</strong>滿 3 歲順利進入幼兒園小班！適應力極佳，每天放學總是滿臉笑容分享學校遊戲。
+          </p>
+          <button class="btn-outline btn-sm" onclick="switchTab('tab-lele')">查看樂樂專區 ➜</button>
+        </div>
+      </div>
+
+      <!-- Health & Growth Highlights Grid -->
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title" style="margin-bottom: 12px;">🦷 牙齒與視力維護</div>
+          <p style="font-size: 0.88rem; color: #475569; line-height: 1.6;">
+            • <strong>安安</strong>：中班裸視 1.0 正常，定期半年塗氟，目前 0 蛀牙。<br>
+            • <strong>樂樂</strong>：3 歲配合度極高，牙醫檢查乳牙齒列健康排列佳。<br>
+            📅 <strong>下次塗氟提醒</strong>：建議預約 2026 年 10~11 月。
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom: 12px;">👟 近期換鞋提醒</div>
+          <p style="font-size: 0.88rem; color: #475569; line-height: 1.6;">
+            • <strong>安安</strong>：目前腳長約 18.6cm，運動鞋建議穿 19.0cm。<br>
+            • <strong>樂樂</strong>：目前腳長約 16.2cm，運動鞋建議穿 16.5 ~ 17.0cm。<br>
+            💡 <strong>小叮嚀</strong>：學齡前每 3~4 個月需重新量測腳長防磨腳！
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom: 12px;">💬 兄弟暖心金句</div>
+          <div style="font-style: italic; color: #334155; font-size: 0.9rem; padding: 10px; background: #f8fafc; border-radius: 8px;">
+            「弟弟別怕，我是保護你的隊長！」<br>
+            <span style="font-size: 0.78rem; color: #64748b; font-style: normal; display: block; text-align: right; margin-top: 4px;">— 安安 (2026/06)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================
+         Tab 2: 安安專屬成長專區 (An-An)
+         ========================================= -->
+    <section id="tab-anan" class="tab-pane">
+      <div class="section-title-wrap">
+        <h2>👦 安安 成長曲線與中班手札</h2>
+        <p>生日：2021/11/26 ｜ 衛福部 0~7 歲男童標準曲線對照 ｜ 幼兒園中班</p>
+      </div>
+
+      <!-- Growth Chart Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📈 生長趨勢折線圖（衛福部標準百分位對照）</div>
+          <div class="chart-controls">
+            <button class="btn-toggle active" onclick="updateSingleChart('anan', 'height')">身高 (cm)</button>
+            <button class="btn-toggle" onclick="updateSingleChart('anan', 'weight')">體重 (kg)</button>
+          </div>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+          💡 <strong>圖表說明：</strong> 實線為安安歷程數值；彩色淺色帶為衛福部/WHO 男童 P3 ~ P97 正常生長區間，中央虛線為 P50 中位數。
+        </p>
+        <div class="chart-wrapper">
+          <canvas id="chart-anan"></canvas>
+        </div>
+      </div>
+
+      <!-- History Data Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 歷次測量數據紀錄表</div>
+          <span class="badge badge-anan">共 <span id="anan-record-count">0</span> 筆紀錄</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="table-anan">
+            <thead>
+              <tr>
+                <th>測量日期</th>
+                <th>年齡 (月齡)</th>
+                <th>身高 (cm)</th>
+                <th>體重 (kg)</th>
+                <th>BMI</th>
+                <th>腳長 / 鞋碼</th>
+                <th>頭圍 (cm)</th>
+                <th>成長備忘 / 狀態</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Milestones Timeline -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⭐ 安安重要成長里程碑 & 暖心趣事</div>
+        </div>
+        <div class="timeline" id="timeline-anan">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================
+         Tab 3: 樂樂專屬成長專區 (Le-Le)
+         ========================================= -->
+    <section id="tab-lele" class="tab-pane">
+      <div class="section-title-wrap">
+        <h2>👶 樂樂 成長曲線與小班手札</h2>
+        <p>生日：2023/06/03 ｜ 衛福部 0~7 歲男童標準曲線對照 ｜ 幼兒園小班</p>
+      </div>
+
+      <!-- Growth Chart Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📈 生長趨勢折線圖（衛福部標準百分位對照）</div>
+          <div class="chart-controls">
+            <button class="btn-toggle active" onclick="updateSingleChart('lele', 'height')">身高 (cm)</button>
+            <button class="btn-toggle" onclick="updateSingleChart('lele', 'weight')">體重 (kg)</button>
+          </div>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+          💡 <strong>圖表說明：</strong> 實線為樂樂歷程數值；彩色淺色帶為衛福部/WHO 男童 P3 ~ P97 正常生長區間，中央虛線為 P50 中位數。
+        </p>
+        <div class="chart-wrapper">
+          <canvas id="chart-lele"></canvas>
+        </div>
+      </div>
+
+      <!-- History Data Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 歷次測量數據紀錄表</div>
+          <span class="badge badge-lele">共 <span id="lele-record-count">0</span> 筆紀錄</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="table-lele">
+            <thead>
+              <tr>
+                <th>測量日期</th>
+                <th>年齡 (月齡)</th>
+                <th>身高 (cm)</th>
+                <th>體重 (kg)</th>
+                <th>BMI</th>
+                <th>腳長 / 鞋碼</th>
+                <th>頭圍 (cm)</th>
+                <th>成長備忘 / 狀態</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Milestones Timeline -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⭐ 樂樂重要成長里程碑 & 搞笑金句</div>
+        </div>
+        <div class="timeline" id="timeline-lele">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================
+         Tab 4: 同年齡對比 (Age Comparison)
+         ========================================= -->
+    <section id="tab-compare" class="tab-pane">
+      <div class="section-title-wrap">
+        <h2>⚖️ 雙寶同年齡成長軌跡對比</h2>
+        <p>將兩兄弟的成長軸拉到相同歲數（0 歲、1 歲、2 歲、3 歲），對照兩兄弟成長步伐的異同！</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📊 安安 vs 樂樂「相同歲數」生長曲線</div>
+          <div class="chart-controls">
+            <button class="btn-toggle active" onclick="updateCompareChart('height')">同年身高對比 (cm)</button>
+            <button class="btn-toggle" onclick="updateCompareChart('weight')">同年體重對比 (kg)</button>
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="chart-compare"></canvas>
+        </div>
+      </div>
+
+      <!-- Comparison Data Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🔍 經典年齡節點數據對照表</div>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>重要年齡節點</th>
+                <th>👦 安安 身高 / 體重</th>
+                <th>👦 安安 腳長鞋碼</th>
+                <th>👶 樂樂 身高 / 體重</th>
+                <th>👶 樂樂 腳長鞋碼</th>
+                <th>兄弟發展對照亮點</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>出生滿月 (0M)</strong></td>
+                <td>50.5 cm / 3.35 kg</td>
+                <td>8.0 cm (新生兒)</td>
+                <td>49.8 cm / 3.20 kg</td>
+                <td>7.8 cm (新生兒)</td>
+                <td>兩兄弟出生數值極為相近，皆落在 50% 標準線</td>
+              </tr>
+              <tr>
+                <td><strong>滿 1 歲 (12M)</strong></td>
+                <td>75.8 cm / 9.8 kg</td>
+                <td>12.0 cm (12.5cm鞋)</td>
+                <td>75.0 cm / 9.6 kg</td>
+                <td>11.8 cm (12.5cm鞋)</td>
+                <td>周歲時安安開始扶站抓周，樂樂更早開始扶著到處走動</td>
+              </tr>
+              <tr>
+                <td><strong>滿 2 歲 (24M)</strong></td>
+                <td>88.5 cm / 12.8 kg</td>
+                <td>14.0 cm (14.5cm鞋)</td>
+                <td>87.8 cm / 12.5 kg</td>
+                <td>14.0 cm (14.5cm鞋)</td>
+                <td>2 歲時兩兄弟身高體重步調一致，樂樂口條模仿速度非常快</td>
+              </tr>
+              <tr>
+                <td><strong>滿 3 歲 (36M)</strong></td>
+                <td>97.2 cm / 15.3 kg</td>
+                <td>16.0 cm (16.5cm鞋)</td>
+                <td>96.5 cm / 15.0 kg</td>
+                <td>15.8 cm (16.0cm鞋)</td>
+                <td>安安 3 歲熱愛滑步車與恐龍，樂樂 3 歲活潑自信迎接入學</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================
+         Tab 5: 鞋碼與選鞋指南 (Shoe Size Hub)
+         ========================================= -->
+    <section id="tab-shoes" class="tab-pane">
+      <div class="section-title-wrap">
+        <h2>👟 兒童鞋碼與精準選鞋指南</h2>
+        <p>幼兒發育迅速，穿合適的鞋子能保護足弓發育與預防扁平足、走路姿勢端正。</p>
+      </div>
+
+      <!-- Current Foot & Shoe Status -->
+      <div class="grid-2">
+        <div class="card" style="border-left: 5px solid var(--anan-accent);">
+          <div class="card-title" style="margin-bottom: 8px;">👦 安安 目前鞋碼建議 (中班)</div>
+          <p style="font-size: 0.95rem; color: #334155; margin-bottom: 6px;">
+            • 實際腳長：<strong>18.6 cm</strong><br>
+            • 建議鞋內長：<strong>19.5 cm</strong> (預留 0.8~1.0cm 活動空間)<br>
+            • 推薦尺碼：<strong>JP 19.0 ~ 19.5 / US 13C / EUR 31</strong>
+          </p>
+          <span class="badge badge-anan">大肌肉活動量大，注重足弓支撐</span>
+        </div>
+
+        <div class="card" style="border-left: 5px solid var(--lele-accent);">
+          <div class="card-title" style="margin-bottom: 8px;">👶 樂樂 目前鞋碼建議 (小班)</div>
+          <p style="font-size: 0.95rem; color: #334155; margin-bottom: 6px;">
+            • 實際腳長：<strong>16.2 cm</strong><br>
+            • 建議鞋內長：<strong>17.0 cm</strong> (預留 0.8cm 活動空間)<br>
+            • 推薦尺碼：<strong>JP 16.5 ~ 17.0 / US 10C / EUR 27</strong>
+          </p>
+          <span class="badge badge-lele">幼兒園自理期，魔鬼氈寬楦最佳</span>
+        </div>
+      </div>
+
+      <!-- Interactive Calculator -->
+      <div class="shoe-interactive-calculator">
+        <div class="card-title">📏 互動測量試算：輸入寶寶腳長換算鞋碼</div>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;">
+          請寶寶光腳踩在白紙上，腳後跟與最長腳趾畫線測量直線距離（cm）：
+        </p>
+        <div class="calc-input-group">
+          <input type="number" id="calc-foot-input" placeholder="例如: 17.2" step="0.1" min="8" max="25">
+          <button class="calc-btn" onclick="calculateShoeSize()">立即試算尺碼</button>
+        </div>
+        <div id="calc-result" class="calc-result-box">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Tips Banner -->
+      <div class="shoe-measure-card">
+        <div class="shoe-measure-icon">💡</div>
+        <div class="shoe-measure-content">
+          <h4>如何挑選最合適的學齡前童鞋？</h4>
+          <p>
+            1. <strong>預留空間</strong>：運動鞋建議預留 <strong>0.8 ~ 1.0 cm</strong>（約媽媽一指寬），涼鞋預留 <strong>0.5 cm</strong>。<br>
+            2. <strong>更換時機</strong>：學齡前孩童平均 3~4 個月腳長增加 0.5cm，當鞋內預留空間小於 0.5cm 時就該換新鞋，避免擠壓腳趾造成甲溝炎。<br>
+            3. <strong>試鞋時間</strong>：建議下午或傍晚量測試穿，此時雙腳稍微腫脹，量測最精準。
+          </p>
+        </div>
+      </div>
+
+      <!-- Complete Size Guide Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📖 兒童鞋碼快速對照表</div>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="table-shoes-guide">
+            <thead>
+              <tr>
+                <th>實際腳長 (cm)</th>
+                <th>日本碼 (JP cm)</th>
+                <th>美碼 (US)</th>
+                <th>歐碼 (EUR)</th>
+                <th>適合發育階段</th>
+                <th>選鞋建議與特點</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Brand Fitting Notes -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🏷️ 常見熱門童鞋品牌版型特性</div>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="table-brand-tips">
+            <thead>
+              <tr>
+                <th>童鞋品牌 / 系列</th>
+                <th>版型特點與挑選建議</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================
+         Tab 6: 登錄與資料管理 (Data Management - 方案 C)
+         ========================================= -->
+    <section id="tab-manage" class="tab-pane">
+      <div class="section-title-wrap">
+        <h2>📝 數據登錄與更新中心</h2>
+        <p>方案 C 靜態託管架構：可在本機/線上隨時填寫新數據立即預覽，並支援一鍵匯出保存！</p>
+      </div>
+
+      <div class="alert-box success">
+        <strong>🌐 線上查詢與更新運作方式（如同沖繩旅遊計畫）：</strong><br>
+        1. <strong>即時登錄</strong>：填寫下方表單儲存後，瀏覽器會立即自動儲存並重新渲染最新圖表與曲線！<br>
+        2. <strong>同步發布</strong>：點擊「下載最新 data.js」或「複製最新資料代碼」，覆蓋專案中的 <code>data.js</code> 並 push 到 GitHub，線上 GitHub Pages 即可永久更新！
+      </div>
+
+      <!-- Add New Measurement Form -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">➕ 新增生理量測紀錄（身高、體重、鞋碼）</div>
+        </div>
+        <form id="form-add-record" onsubmit="handleAddRecord(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="input-child">選擇寶貝 *</label>
+              <select id="input-child" class="form-control" required>
+                <option value="anan">👦 安安 (哥哥)</option>
+                <option value="lele">👶 樂樂 (弟弟)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="input-date">測量日期 *</label>
+              <input type="date" id="input-date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="input-height">身高 (cm) *</label>
+              <input type="number" id="input-height" class="form-control" step="0.1" placeholder="例如: 111.5" required>
+            </div>
+            <div class="form-group">
+              <label for="input-weight">體重 (kg) *</label>
+              <input type="number" id="input-weight" class="form-control" step="0.05" placeholder="例如: 19.4" required>
+            </div>
+            <div class="form-group">
+              <label for="input-foot">腳長 (cm)</label>
+              <input type="number" id="input-foot" class="form-control" step="0.1" placeholder="例如: 18.6">
+            </div>
+            <div class="form-group">
+              <label for="input-shoe">目前穿著鞋碼</label>
+              <input type="text" id="input-shoe" class="form-control" placeholder="例如: 19.0 cm">
+            </div>
+            <div class="form-group">
+              <label for="input-head">頭圍 (cm)</label>
+              <input type="number" id="input-head" class="form-control" step="0.1" placeholder="例如: 51.7">
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label for="input-note">成長備忘 / 生活事件</label>
+              <input type="text" id="input-note" class="form-control" placeholder="例如: 學校健檢、塗氟無蛀牙、長高有感！">
+            </div>
+          </div>
+          <div class="action-bar">
+            <button type="submit" class="btn-primary">💾 儲存並即時更新圖表</button>
+            <button type="reset" class="btn-outline">清空重填</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Add Milestone Form -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⭐ 新增里程碑 / 金句語錄</div>
+        </div>
+        <form id="form-add-milestone" onsubmit="handleAddMilestone(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="input-ms-child">選擇寶貝 *</label>
+              <select id="input-ms-child" class="form-control" required>
+                <option value="anan">👦 安安 (哥哥)</option>
+                <option value="lele">👶 樂樂 (弟弟)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="input-ms-date">發生年月 (例如 2026-09) *</label>
+              <input type="text" id="input-ms-date" class="form-control" placeholder="YYYY-MM" required>
+            </div>
+            <div class="form-group">
+              <label for="input-ms-icon">圖示 Emoji</label>
+              <select id="input-ms-icon" class="form-control">
+                <option value="🌟">🌟 成就亮點</option>
+                <option value="💬">💬 搞笑金句</option>
+                <option value="🚲">🚲 運動/大肌肉</option>
+                <option value="🦷">🦷 牙齒/健康</option>
+                <option value="🎒">🎒 學校生活</option>
+                <option value="❤️">❤️ 暖心陪伴</option>
+              </select>
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label for="input-ms-title">標題 *</label>
+              <input type="text" id="input-ms-title" class="form-control" placeholder="例如: 學會自己綁鞋帶、或是好笑的一句話" required>
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label for="input-ms-desc">詳細敘述</label>
+              <textarea id="input-ms-desc" class="form-control" rows="2" placeholder="紀錄當時有趣的細節..."></textarea>
+            </div>
+          </div>
+          <div class="action-bar">
+            <button type="submit" class="btn-primary">⭐ 儲存里程碑</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Data Export & Backup Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📦 資料備份、匯出與 GitHub 同步</div>
+        </div>
+        <p style="font-size: 0.9rem; color: #475569; margin-bottom: 16px;">
+          透過以下按鈕，您可以隨時匯出整份資料庫，備份至電腦或更新回 <code>data.js</code>：
+        </p>
+        <div class="action-bar">
+          <button class="btn-primary" onclick="exportDataJs()">📥 下載最新 data.js (替換專案即同步)</button>
+          <button class="btn-outline" onclick="exportJSON()">💾 匯出 JSON 備份檔</button>
+          <button class="btn-outline" onclick="copyDataToClipboard()">📋 複製最新資料代碼</button>
+          <button class="btn-outline" style="color: #dc2626; border-color: #fca5a5;" onclick="resetToInitial()">🔄 還原初始範例資料</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>🌱 <strong>安安與樂樂 成長趨勢手冊</strong> ｜ 記錄每一個珍貴的成長步伐</p>
+      <p class="footer-sub">Antigravity Growth Tracker ・ Designed for Family Memories & Health</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="data.js?v=1"></script>
+  <script src="app.js?v=1"></script>
+</body>
+</html>
