@@ -170,34 +170,31 @@ function renderAllViews() {
 }
 
 /**
- * 渲染頂部 Hero 摘要卡片
+ * 渲染頂部 Hero 摘要卡片（支援部分更新，自動取各指標最新有效數值）
  */
 function renderHeroSummary() {
   const anan = growthData.children.anan;
   const lele = growthData.children.lele;
 
-  const ananAge = calculateAge(anan.birthDate);
-  const leleAge = calculateAge(lele.birthDate);
+  document.getElementById("hero-age-anan").textContent = calculateAge(anan.birthDate).formatted;
+  document.getElementById("hero-age-lele").textContent = calculateAge(lele.birthDate).formatted;
 
-  document.getElementById("hero-age-anan").textContent = ananAge.formatted;
-  document.getElementById("hero-age-lele").textContent = leleAge.formatted;
+  [anan, lele].forEach(child => {
+    const id = child.id;
+    const records = child.records || [];
+    const latestH = [...records].reverse().find(r => r.height != null && r.height !== "");
+    const latestW = [...records].reverse().find(r => r.weight != null && r.weight !== "");
+    const latestS = [...records].reverse().find(r => (r.shoeSize && r.shoeSize !== "") || (r.footLength != null && r.footLength !== ""));
 
-  const ananLatest = anan.records && anan.records.length > 0 ? anan.records[anan.records.length - 1] : null;
-  const leleLatest = lele.records && lele.records.length > 0 ? lele.records[lele.records.length - 1] : null;
-
-  document.getElementById("hero-h-anan").textContent = ananLatest ? ananLatest.height : "--";
-  document.getElementById("hero-w-anan").textContent = ananLatest ? ananLatest.weight : "--";
-  document.getElementById("hero-s-anan").textContent = (ananLatest && ananLatest.shoeSize) ? ananLatest.shoeSize : "--";
-  document.getElementById("hero-bmi-anan").textContent = ananLatest ? calculateBMI(ananLatest.height, ananLatest.weight) : "--";
-
-  document.getElementById("hero-h-lele").textContent = leleLatest ? leleLatest.height : "--";
-  document.getElementById("hero-w-lele").textContent = leleLatest ? leleLatest.weight : "--";
-  document.getElementById("hero-s-lele").textContent = (leleLatest && leleLatest.shoeSize) ? leleLatest.shoeSize : "--";
-  document.getElementById("hero-bmi-lele").textContent = leleLatest ? calculateBMI(leleLatest.height, leleLatest.weight) : "--";
+    document.getElementById(`hero-h-${id}`).textContent = latestH ? latestH.height : "--";
+    document.getElementById(`hero-w-${id}`).textContent = latestW ? latestW.weight : "--";
+    document.getElementById(`hero-s-${id}`).textContent = latestS ? (latestS.shoeSize || (latestS.footLength ? latestS.footLength + 'cm' : '--')) : "--";
+    document.getElementById(`hero-bmi-${id}`).textContent = (latestH && latestW) ? calculateBMI(latestH.height, latestW.weight) : "--";
+  });
 }
 
 /**
- * 渲染總覽儀表板卡片
+ * 渲染總覽儀表板卡片（支援部分更新與指標分離顯示）
  */
 function renderOverviewMetrics() {
   ["anan", "lele"].forEach(childId => {
@@ -205,49 +202,54 @@ function renderOverviewMetrics() {
     const container = document.getElementById(`overview-metrics-${childId}`);
     if (!container) return;
 
-    if (!child.records || child.records.length === 0) {
+    const records = child.records || [];
+    if (records.length === 0) {
       container.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: 22px 14px; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1; color: #64748b;">
           <div style="font-size: 1.5rem; margin-bottom: 4px;">🌱</div>
           <strong>尚未建立 ${child.name} 的測量數據</strong>
-          <p style="font-size: 0.85rem; margin-top: 4px; color: #94a3b8;">請點擊「登錄與資料管理」新增第一筆身高、體重與鞋碼！</p>
+          <p style="font-size: 0.85rem; margin-top: 4px; color: #94a3b8;">請點擊「登錄與資料管理」新增身高、體重或鞋碼！</p>
         </div>
       `;
       return;
     }
 
-    const latest = child.records[child.records.length - 1];
-    const age = calculateAge(child.birthDate, latest.date);
-    const bmi = calculateBMI(latest.height, latest.weight);
-    const hPercentile = estimatePercentile("height", latest.ageMonths || age.totalMonths, latest.height);
+    const latestH = [...records].reverse().find(r => r.height != null && r.height !== "");
+    const latestW = [...records].reverse().find(r => r.weight != null && r.weight !== "");
+    const latestS = [...records].reverse().find(r => (r.shoeSize && r.shoeSize !== "") || (r.footLength != null && r.footLength !== ""));
+    const latestAny = records[records.length - 1];
+
+    const age = calculateAge(child.birthDate, latestAny.date);
+    const bmi = (latestH && latestW) ? calculateBMI(latestH.height, latestW.weight) : "--";
+    const hPercentile = latestH ? estimatePercentile("height", latestH.ageMonths || age.totalMonths, latestH.height) : "--";
 
     container.innerHTML = `
       <div class="metric-pill">
-        <div class="metric-label">目前身高</div>
-        <div class="metric-val">${latest.height || "--"} <span class="metric-unit">cm</span></div>
+        <div class="metric-label">最新身高</div>
+        <div class="metric-val">${latestH ? latestH.height : "--"} <span class="metric-unit">cm</span></div>
         <div class="metric-sub p-normal">${hPercentile}</div>
       </div>
       <div class="metric-pill">
-        <div class="metric-label">目前體重</div>
-        <div class="metric-val">${latest.weight || "--"} <span class="metric-unit">kg</span></div>
+        <div class="metric-label">最新體重</div>
+        <div class="metric-val">${latestW ? latestW.weight : "--"} <span class="metric-unit">kg</span></div>
         <div class="metric-sub p-normal">BMI: ${bmi}</div>
       </div>
       <div class="metric-pill">
         <div class="metric-label">腳長 / 鞋碼</div>
-        <div class="metric-val">${latest.footLength || "--"} <span class="metric-unit">cm</span></div>
-        <div class="metric-sub" style="color: #4f46e5;">穿 ${latest.shoeSize || "--"}</div>
+        <div class="metric-val">${latestS && latestS.footLength ? latestS.footLength : "--"} <span class="metric-unit">cm</span></div>
+        <div class="metric-sub" style="color: #4f46e5;">穿 ${latestS && latestS.shoeSize ? latestS.shoeSize : "--"}</div>
       </div>
       <div class="metric-pill">
         <div class="metric-label">最新量測日</div>
-        <div class="metric-val" style="font-size: 1.05rem; padding-top: 4px;">${latest.date || "--"}</div>
-        <div class="metric-sub" style="color: #64748b;">滿 ${latest.ageMonths || age.totalMonths} 個月</div>
+        <div class="metric-val" style="font-size: 1.05rem; padding-top: 4px;">${latestAny.date || "--"}</div>
+        <div class="metric-sub" style="color: #64748b;">滿 ${latestAny.ageMonths || age.totalMonths} 個月</div>
       </div>
     `;
   });
 }
 
 /**
- * 渲染個別歷史表格
+ * 渲染個別歷史表格（支援單筆刪除與空值容錯）
  */
 function renderTables() {
   ["anan", "lele"].forEach(childId => {
@@ -262,7 +264,7 @@ function renderTables() {
     if (count === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" style="text-align: center; color: #94a3b8; padding: 36px 16px;">
+          <td colspan="9" style="text-align: center; color: #94a3b8; padding: 36px 16px;">
             📝 目前尚無 ${child.name} 的測量紀錄。請至上方「📝 登錄與資料管理」填寫第一筆數據！
           </td>
         </tr>
@@ -270,19 +272,28 @@ function renderTables() {
       return;
     }
 
-    tbody.innerHTML = child.records.map(rec => {
-      const bmi = calculateBMI(rec.height, rec.weight);
+    tbody.innerHTML = child.records.map((rec, idx) => {
+      const heightStr = (rec.height != null && rec.height !== "") ? `<strong>${rec.height}</strong> cm` : '--';
+      const weightStr = (rec.weight != null && rec.weight !== "") ? `<strong>${rec.weight}</strong> kg` : '--';
+      const bmi = (rec.height && rec.weight) ? calculateBMI(rec.height, rec.weight) : '--';
+      const footShoeStr = (rec.footLength || rec.shoeSize) ?
+        `👣 ${rec.footLength ? rec.footLength + ' cm' : ''} ${rec.shoeSize ? '<strong>(' + rec.shoeSize + ')</strong>' : ''}` : '--';
+      const headStr = (rec.head != null && rec.head !== "") ? `${rec.head} cm` : '--';
       const ageStr = `${Math.floor(rec.ageMonths / 12)} 歲 ${rec.ageMonths % 12} 月 (${rec.ageMonths}M)`;
+
       return `
         <tr>
           <td><strong>${rec.date}</strong></td>
           <td><span class="badge ${childId === 'anan' ? 'badge-anan' : 'badge-lele'}">${ageStr}</span></td>
-          <td><strong>${rec.height}</strong> cm</td>
-          <td><strong>${rec.weight}</strong> kg</td>
+          <td>${heightStr}</td>
+          <td>${weightStr}</td>
           <td>${bmi}</td>
-          <td>👣 ${rec.footLength ? rec.footLength + ' cm' : '--'} / <strong>${rec.shoeSize || '--'}</strong></td>
-          <td>${rec.head ? rec.head + ' cm' : '--'}</td>
+          <td>${footShoeStr}</td>
+          <td>${headStr}</td>
           <td style="color: #475569;">${rec.note || ''}</td>
+          <td>
+            <button class="btn-outline" style="padding: 3px 8px; font-size: 0.78rem; color: #ef4444; border-color: #fca5a5; border-radius: 4px;" onclick="deleteRecord('${childId}', '${rec.date}')" title="刪除此筆紀錄">🗑️</button>
+          </td>
         </tr>
       `;
     }).reverse().join("");
@@ -817,39 +828,80 @@ function handleAddRecord(e) {
 
   const childId = document.getElementById("input-child").value;
   const date = document.getElementById("input-date").value;
-  const height = parseFloat(document.getElementById("input-height").value);
-  const weight = parseFloat(document.getElementById("input-weight").value);
-  const foot = document.getElementById("input-foot").value ? parseFloat(document.getElementById("input-foot").value) : null;
-  const shoe = document.getElementById("input-shoe").value || "";
-  const head = document.getElementById("input-head").value ? parseFloat(document.getElementById("input-head").value) : null;
-  const note = document.getElementById("input-note").value || "";
+  const hInput = document.getElementById("input-height").value;
+  const wInput = document.getElementById("input-weight").value;
+  const footInput = document.getElementById("input-foot").value;
+  const shoeInput = document.getElementById("input-shoe").value.trim();
+  const headInput = document.getElementById("input-head").value;
+  const noteInput = document.getElementById("input-note").value.trim();
+
+  // 驗證：至少需填入一項數值或備忘
+  if (hInput === "" && wInput === "" && footInput === "" && shoeInput === "" && headInput === "" && noteInput === "") {
+    alert("⚠️ 請至少填寫一項數值（身高、體重、腳長、鞋碼、頭圍或備忘）！");
+    return;
+  }
 
   const child = growthData.children[childId];
   const age = calculateAge(child.birthDate, date);
 
   if (!child.records) child.records = [];
 
-  const newRecord = {
-    date: date,
-    ageMonths: age.totalMonths,
-    height: height,
-    weight: weight,
-    footLength: foot,
-    shoeSize: shoe,
-    head: head,
-    note: note
-  };
+  // 支援部分更新：檢查是否已存在該日期的紀錄
+  let record = child.records.find(r => r.date === date);
+  const isUpdate = !!record;
 
-  child.records.push(newRecord);
+  if (!record) {
+    record = {
+      date: date,
+      ageMonths: age.totalMonths,
+      height: null,
+      weight: null,
+      footLength: null,
+      shoeSize: "",
+      head: null,
+      note: ""
+    };
+    child.records.push(record);
+  }
+
+  // 僅覆蓋有輸入之欄位，其餘維持原值
+  if (hInput !== "") record.height = parseFloat(hInput);
+  if (wInput !== "") record.weight = parseFloat(wInput);
+  if (footInput !== "") record.footLength = parseFloat(footInput);
+  if (shoeInput !== "") record.shoeSize = shoeInput;
+  if (headInput !== "") record.head = parseFloat(headInput);
+  if (noteInput !== "") {
+    if (record.note && isUpdate && record.note !== noteInput) {
+      record.note = record.note + "；" + noteInput;
+    } else {
+      record.note = noteInput;
+    }
+  }
+
+  // 排序
   child.records.sort((a, b) => new Date(a.date) - new Date(b.date));
 
   saveData();
   renderAllViews();
 
-  alert(`✅ 已成功儲存 ${child.name} 於 ${date} 的量測數據！圖表與表格已即時更新。`);
+  alert(`✅ 已成功${isUpdate ? '更新' : '新增'} ${child.name} 於 ${date} 的量測數據！`);
   e.target.reset();
   document.getElementById("input-date").value = new Date().toISOString().split('T')[0];
   switchTab(`tab-${childId}`);
+}
+
+/**
+ * 刪除指定日期的測量紀錄
+ */
+function deleteRecord(childId, date) {
+  const child = growthData.children[childId];
+  if (!child || !child.records) return;
+
+  if (confirm(`確定要刪除 ${child.name} 於 ${date} 的這筆量測紀錄嗎？`)) {
+    child.records = child.records.filter(r => r.date !== date);
+    saveData();
+    renderAllViews();
+  }
 }
 
 /**

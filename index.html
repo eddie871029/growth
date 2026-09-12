@@ -14,7 +14,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=20260912_v3">
+  <link rel="stylesheet" href="styles.css?v=20260912_v4">
 </head>
 <body>
 
@@ -199,6 +199,7 @@
                 <th>腳長 / 鞋碼</th>
                 <th>頭圍 (cm)</th>
                 <th>成長備忘 / 狀態</th>
+                <th>操作</th>
               </tr>
             </thead>
             <tbody>
@@ -263,6 +264,7 @@
                 <th>腳長 / 鞋碼</th>
                 <th>頭圍 (cm)</th>
                 <th>成長備忘 / 狀態</th>
+                <th>操作</th>
               </tr>
             </thead>
             <tbody>
@@ -441,8 +443,11 @@
       <!-- Add New Measurement Form -->
       <div class="card">
         <div class="card-header">
-          <div class="card-title">➕ 新增生理量測紀錄（身高、體重、鞋碼）</div>
+          <div class="card-title">➕ 登錄生理量測紀錄（支援部分更新）</div>
         </div>
+        <p style="font-size: 0.88rem; color: #475569; margin-bottom: 16px;">
+          💡 <strong>彈性登錄：</strong>僅「測量日期」為必填項目，身高、體重、腳長、鞋碼等皆可獨立填寫。若同一天已有紀錄，系統會自動合併更新該筆資料！
+        </p>
         <form id="form-add-record" onsubmit="handleAddRecord(event)">
           <div class="form-grid">
             <div class="form-group">
@@ -457,15 +462,15 @@
               <input type="date" id="input-date" class="form-control" required>
             </div>
             <div class="form-group">
-              <label for="input-height">身高 (cm) *</label>
-              <input type="number" id="input-height" class="form-control" step="0.1" placeholder="例如: 111.5" required>
+              <label for="input-height">身高 (cm) <span style="font-size: 0.78rem; color: #64748b; font-weight: normal;">(選填)</span></label>
+              <input type="number" id="input-height" class="form-control" step="0.1" placeholder="例如: 111.5">
             </div>
             <div class="form-group">
-              <label for="input-weight">體重 (kg) *</label>
-              <input type="number" id="input-weight" class="form-control" step="0.05" placeholder="例如: 19.4" required>
+              <label for="input-weight">體重 (kg) <span style="font-size: 0.78rem; color: #64748b; font-weight: normal;">(選填)</span></label>
+              <input type="number" id="input-weight" class="form-control" step="0.05" placeholder="例如: 19.4">
             </div>
             <div class="form-group">
-              <label for="input-foot">腳長 (cm)</label>
+              <label for="input-foot">腳長 (cm) <span style="font-size: 0.78rem; color: #64748b; font-weight: normal;">(選填)</span></label>
               <input type="number" id="input-foot" class="form-control" step="0.1" placeholder="例如: 18.6">
             </div>
             <div class="form-group">
@@ -560,7 +565,7 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="data.js?v=20260912_v3"></script>
-  <script src="app.js?v=20260912_v3"></script>
+  <script src="data.js?v=20260912_v4"></script>
+  <script src="app.js?v=20260912_v4"></script>
 </body>
 </html>
